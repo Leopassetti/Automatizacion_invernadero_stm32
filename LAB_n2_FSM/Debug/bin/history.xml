@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -g -nostartfiles -Map=LAB_n2_FSM.map -O0 --gc-sections -lm -lgcc -lc -LC:\CooCox\CoIDE\configuration\ProgramData\LAB_n2_FSM -TC:\CooCox\CoIDE\configuration\ProgramData\LAB_n2_FSM/arm-gcc-link.ld -g">
+      <target file="LAB_n2_FSM.elf" lastModified="14b2cc48ff5">
+         <source file="..\obj\stm32f4xx_syscfg.o" lastModified="14b29a91ea7"/>
+         <source file="..\obj\stm32f4xx_usart.o" lastModified="14b29a91f6d"/>
+         <source file="..\obj\startup_stm32f4xx.o" lastModified="14b29a91fd9"/>
+         <source file="..\obj\main.o" lastModified="14b2cc48be0"/>
+         <source file="..\obj\stm32f4xx_rcc.o" lastModified="14b29a920bb"/>
+         <source file="..\obj\stm32f4xx_adc.o" lastModified="14b29a92201"/>
+         <source file="..\obj\stm32f4xx_gpio.o" lastModified="14b29a9229c"/>
+         <source file="..\obj\system_stm32f4xx.o" lastModified="14b29a922f1"/>
+         <source file="..\obj\syscalls.o" lastModified="14b29bd544c"/>
+         <source file="..\obj\bsp.o" lastModified="14b2a08d96f"/>
+         <source file="..\obj\misc.o" lastModified="14b29a923b7"/>
+         <source file="..\obj\stm32f4xx_tim.o" lastModified="14b29a92489"/>
+      </target>
+   </processor>
+</history>
