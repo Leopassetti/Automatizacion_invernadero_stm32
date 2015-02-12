@@ -5,32 +5,36 @@
 #include "stm32f4xx_syscfg.h"	// configuraciones Generales
 #include "stm32f4xx_usart.h"	// libreria para modulo uart
 #include "stm32f4xx_adc.h"		//libreria adc
+#include "stm32f4xx_exti.h"
 #include "misc.h"				// Vectores de interrupciones (NVIC)
 #include "bsp.h"
 #include "dht22.h"
 
-#define LED_V GPIO_Pin_12
-#define LED_N GPIO_Pin_13
-#define LED_R GPIO_Pin_14
-#define LED_A GPIO_Pin_15
+#define LED_1 GPIO_Pin_0
+#define LED_2 GPIO_Pin_1
+#define LED_3 GPIO_Pin_2
+#define LED_4 GPIO_Pin_3
 
-#define SW_1 GPIO_Pin_4
-#define SW_2 GPIO_Pin_5
-#define SW_3 GPIO_Pin_6
-#define SW_4 GPIO_Pin_2
+#define VENT_1 GPIO_Pin_12
+#define VENT_2 GPIO_Pin_13
+#define VENT_3 GPIO_Pin_14
+#define VENT_4 GPIO_Pin_15
+
+#define BOTON GPIO_Pin_0
 
 /* Puertos de los leds disponibles */
 GPIO_TypeDef* leds_port[] = { GPIOD, GPIOD, GPIOD, GPIOD };
 /* Leds disponibles */
-uint16_t const leds[] = { LED_R, LED_V, LED_N, LED_A };
+uint16_t const leds[] = { LED_1, LED_2, LED_3, LED_4 };
 
-/* Puertos de los sw disponibles */
-GPIO_TypeDef* sw_port[] = { GPIOE, GPIOE, GPIOE, GPIOE };
+/* Puertos de los ventiladores disponibles */
+GPIO_TypeDef* vent_port[] = { GPIOD , GPIOD , GPIOD , GPIOD  };
 /* Leds disponibles */
-uint16_t const pulsadores[] = { SW_1, SW_2, SW_3, SW_4 };
+uint16_t const vent[] = { VENT_1, VENT_2, VENT_3, VENT_4 };
 
 extern void APP_ISR_10ms(void);
 extern void APP_dato_rx(uint8_t dato);
+extern void APP_ISR_sw(void);
 
 void led_on(uint8_t led) {
 	GPIO_SetBits(leds_port[led], leds[led]);
@@ -44,16 +48,6 @@ void led_toggle(uint8_t led) {
 	GPIO_ToggleBits(leds_port[led], leds[led]);
 }
 
-uint8_t get_led(uint8_t ledPin) {
-
-	return GPIO_ReadOutputDataBit(leds_port[ledPin], leds[ledPin]);
-
-}
-
-uint8_t sw_getState(uint8_t sw) {
-
-	return GPIO_ReadInputDataBit(sw_port[sw], pulsadores[sw]);
-}
 
 void leer_sensor(void) {
 
@@ -97,8 +91,34 @@ void transmit_string(char* str) {
 	}
 }
 
-uint16_t get_ADC(void) {
+void ventilador_on(uint8_t vent_n) {
+	GPIO_SetBits(vent_port[vent_n], vent[vent_n]);
+}
+
+void ventilador_off(uint8_t vent_n) {
+	GPIO_ResetBits(vent_port[vent_n], vent[vent_n]);
+}
+
+void iluminacion(uint8_t estado){
+
+	if(estado == 1){
+		GPIO_SetBits(GPIOD, GPIO_Pin_11);
+	}
+	else{
+		GPIO_ResetBits(GPIOD, GPIO_Pin_11);
+
+	}
+}
+
+
+
+
+
+float leer_temperatura_lm335(void) {
 	uint16_t valor_adc;
+	float temp;
+	float vref = 3.3;
+	float voltaje;
 
 	// Selecciono el canal a convertir
 	ADC_RegularChannelConfig(ADC1, 12, 1, ADC_SampleTime_15Cycles);
@@ -111,7 +131,47 @@ uint16_t get_ADC(void) {
 	// Guardo el valor leido
 	valor_adc = ADC_GetConversionValue(ADC1);
 
+	voltaje = (float)(valor_adc * (vref/4095));
+
+	temp = voltaje; // falta modificar la ecuacion esta
+
+	return temp;
+}
+
+uint16_t get_luz(void) {
+
+	uint16_t valor_adc;
+
+
+	// Selecciono el canal a convertir
+	ADC_RegularChannelConfig(ADC2, 12, 1, ADC_SampleTime_15Cycles);
+	ADC_SoftwareStartConv(ADC2);
+
+	// Espero a que la conversión termine
+	while (ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) != SET)
+		;
+
+	// Guardo el valor leido
+	valor_adc = ADC_GetConversionValue(ADC2);
+
+
+
 	return valor_adc;
+}
+
+
+/**
+ * @brief Interrupcion llamada cuando se preciona el pulsador
+ */
+void EXTI0_IRQHandler(void) {
+
+	if (EXTI_GetITStatus(EXTI_Line0) != RESET) //Verificamos si es la del pin configurado
+			{
+		EXTI_ClearFlag(EXTI_Line0); // Limpiamos la Interrupcion
+		// Rutina:
+		APP_ISR_sw();
+
+	}
 }
 
 void TIM2_IRQHandler(void) {
@@ -119,10 +179,7 @@ void TIM2_IRQHandler(void) {
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 
-		APP_ISR_1ms();
-		if (bsp_contMS) {
-			bsp_contMS--;
-		}
+		APP_ISR_10ms();
 
 	}
 }
@@ -144,22 +201,31 @@ void USART3_IRQHandler(void) {
 
 }
 
-//void bsp_led_init();
-//void bsp_sw_init();
+void bsp_led_init();
+void bsp_vent_init();
+void bsp_iluminacion_init();
+void bsp_sw_init();
 void bsp_uart_init();
-void bsp_adc_init();
+void bsp_adc_init_lm335();
+void bsp_adc_init_ldr();
 void bsp_timer3_config();
 void bsp_timer2_config();
 
 
+
 void bsp_init() {
-	//bsp_led_init();
+	bsp_led_init();
+	bsp_vent_init();
+	bsp_iluminacion_init();
 	bsp_uart_init();
-	//bsp_sw_init();
-	bsp_adc_init();
+	bsp_sw_init();
+	bsp_adc_init_lm335();
+	bsp_adc_init_ldr();
 	bsp_timer3_config();
 	bsp_timer2_config();
 	DHT22_Init();
+
+
 
 }
 
@@ -167,6 +233,25 @@ void bsp_init() {
  * @brief Inicializa Leds
  */
 void bsp_led_init() {
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	// Arranco el clock del periferico
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2
+			| GPIO_Pin_3;
+
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP; // (Push/Pull)
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+}
+
+/**
+ * @brief Inicializa Leds
+ */
+void bsp_vent_init() {
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	// Arranco el clock del periferico
@@ -182,19 +267,61 @@ void bsp_led_init() {
 	GPIO_Init(GPIOD, &GPIO_InitStruct);
 }
 
-void bsp_sw_init() {
+
+/**
+ * @brief Inicializa pin de iluminacion
+ */
+void bsp_iluminacion_init() {
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	// Arranco el clock del periferico
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11;
+
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP; // (Push/Pull)
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+}
+
+
+
+
+void bsp_sw_init() {
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	NVIC_InitTypeDef NVIC_InitStructure;
+	EXTI_InitTypeDef EXTI_InitStructure;
+
+	// Arranco el clock del periferico
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+	// Configuro interrupcion
+
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+
+	/* Configuro EXTI Line */
+	EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+	EXTI_Init(&EXTI_InitStructure);
+
+	/* Habilito la EXTI Line Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
 }
 
 void bsp_uart_init() {
@@ -260,7 +387,7 @@ void bsp_uart_init() {
 
 }
 
-void bsp_adc_init() {
+void bsp_adc_init_lm335() {
 
 	GPIO_InitTypeDef GPIO_InitStruct;
 	ADC_CommonInitTypeDef ADC_CommonInitStruct;
@@ -268,13 +395,13 @@ void bsp_adc_init() {
 
 	// Habilito los clock a los periféricos
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
 	// Configuro el pin en modo analógico
 	GPIO_StructInit(&GPIO_InitStruct); // Reseteo la estructura
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN; // Modo Analógico
-	GPIO_Init(GPIOC, &GPIO_InitStruct);
+	GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 	// Configuro el prescaler del ADC
 	ADC_CommonStructInit(&ADC_CommonInitStruct);
@@ -286,6 +413,35 @@ void bsp_adc_init() {
 	ADC1_InitStruct.ADC_Resolution = ADC_Resolution_12b;
 	ADC_Init(ADC1, &ADC1_InitStruct);
 	ADC_Cmd(ADC1, ENABLE);
+
+}
+
+void bsp_adc_init_ldr() {
+
+	GPIO_InitTypeDef GPIO_InitStruct;
+	ADC_CommonInitTypeDef ADC_CommonInitStruct;
+	ADC_InitTypeDef ADC2_InitStruct;
+
+	// Habilito los clock a los periféricos
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+	// Configuro el pin en modo analógico
+	GPIO_StructInit(&GPIO_InitStruct); // Reseteo la estructura
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN; // Modo Analógico
+	GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	// Configuro el prescaler del ADC
+	ADC_CommonStructInit(&ADC_CommonInitStruct);
+	ADC_CommonInitStruct.ADC_Prescaler = ADC_Prescaler_Div4;
+	ADC_CommonInit(&ADC_CommonInitStruct);
+
+	/* Configuro el ADC  */
+	ADC_StructInit(&ADC2_InitStruct);
+	ADC2_InitStruct.ADC_Resolution = ADC_Resolution_12b;
+	ADC_Init(ADC2, &ADC2_InitStruct);
+	ADC_Cmd(ADC2, ENABLE);
 
 }
 

@@ -34,15 +34,23 @@ float leer_temperatura(void);
 float leer_humedad(void);
 
 
-uint8_t get_led(uint8_t ledPin);
+
 
 void enviar_dato(uint16_t tx_buffer);
 
-uint8_t sw_getState(uint8_t sw);
 
 void transmit_string(char* str);
 
-uint16_t get_ADC(void);
+void ventilador_on(uint8_t vent_n);
+
+void ventilador_off(uint8_t vent_n);
+
+void iluminacion(uint8_t estado);
+
+float leer_temperatura_lm335(void);
+
+
+uint16_t get_luz(void);
 
 
 
