@@ -174,10 +174,10 @@ void EXTI0_IRQHandler(void) {
 	}
 }
 
-void TIM2_IRQHandler(void) {
+void TIM3_IRQHandler(void) {
 
-	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
-		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
 		APP_ISR_10ms();
 
@@ -458,7 +458,7 @@ void bsp_timer3_config(void) {
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
-	/* TIM2 habilitado */
+	/* TIM3 habilitado */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 	/* Configuracion de la base de tiempo */
 	TIM_TimeBaseStruct.TIM_Period = 10000; // 1 MHz bajado a 10 KHz (10 ms)
