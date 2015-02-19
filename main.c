@@ -150,6 +150,8 @@ int main(void) {
 		if (botonPresionado == 1) {
 
 			botonPresionado = 0;
+			bsp_delay10Ms(1);
+
 			flagRx = 0;
 			seteo = imprimir_menu();
 
@@ -221,6 +223,7 @@ void APP_ISR_10ms(void) {
 void APP_ISR_sw(void) {
 
 	botonPresionado = 1;
+
 }
 
 uint16_t imprimir_menu(void) {
@@ -232,7 +235,7 @@ uint16_t imprimir_menu(void) {
 	uint8_t dato[4] = {0};
 	uint8_t i;
 
-	temp = leer_temperatura();
+	temp = leer_temperatura_lm335();
 	hum = leer_humedad();
 
 	sprintf(stringMenu, "\n \rIngrese la opcion que desea:\n \r");
@@ -243,7 +246,7 @@ uint16_t imprimir_menu(void) {
 	transmit_string(stringMenu);
 	sprintf(stringMenu, "3. Setear temperatura máxima\n \r");
 	transmit_string(stringMenu);
-	sprintf(stringMenu, "4 . Setear humedad mínima\n \r");
+	sprintf(stringMenu, "4. Setear humedad mínima\n \r");
 	transmit_string(stringMenu);
 	sprintf(stringMenu, "5. Setear humedad máxima\n \r");
 	transmit_string(stringMenu);
@@ -251,7 +254,7 @@ uint16_t imprimir_menu(void) {
 	transmit_string(stringMenu);
 	sprintf(stringMenu, "7. Setear tiempo de apagado de luz\n \r");
 	transmit_string(stringMenu);
-	sprintf(stringMenu, "8. Valores por defecto \n \r");
+	sprintf(stringMenu, "8. Valores por defecto \n\n \r");
 	transmit_string(stringMenu);
 
 	espera = count;
@@ -264,9 +267,9 @@ uint16_t imprimir_menu(void) {
 
 	switch (opcion) {
 	case '1':
-		sprintf(stringMenu, "Temperatura = %2f °C \n \r", temp);
+		sprintf(stringMenu, "Temperatura = %.2f °C \n \r", temp);
 		transmit_string(stringMenu);
-		sprintf(stringMenu, "Humedad = %2f '%' \n \r", hum);
+		sprintf(stringMenu, "Humedad = %.2f% \n \r", hum);
 		transmit_string(stringMenu);
 
 		valorDevolver = 2;
@@ -285,9 +288,12 @@ uint16_t imprimir_menu(void) {
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
-		}
 
-		valorDevolver = ((dato[0] * 10) + dato[1]);
+			}
+
+		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
+		sprintf(stringMenu, "valor ingresado = %d \n \r", valorDevolver);
+		transmit_string(stringMenu);
 
 		break;
 
@@ -305,14 +311,16 @@ uint16_t imprimir_menu(void) {
 			dato[i] = (uint8_t) datoRecibido;
 		}
 
-		valorDevolver = ((dato[0] * 10) + dato[1]);
+		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
+		sprintf(stringMenu, "valor ingresado = %d \n \r", valorDevolver);
+		transmit_string(stringMenu);
 
 		break;
 
 	case '4':
 		sprintf(stringMenu, "ingrese el valor de humedad minima\n \r");
 		transmit_string(stringMenu);
-		sprintf(stringMenu, "valor comprendido entre 20% - 60%\n \r");
+		sprintf(stringMenu, "valor comprendido entre 20% y 60%\n \r");
 		transmit_string(stringMenu);
 		espera = count;
 		for (i = 0; i < 2; i++) {
@@ -323,7 +331,9 @@ uint16_t imprimir_menu(void) {
 			dato[i] = (uint8_t) datoRecibido;
 		}
 
-		valorDevolver = ((dato[0] * 10) + dato[1]);
+		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
+		sprintf(stringMenu, "valor ingresado = %d \n \r", valorDevolver);
+		transmit_string(stringMenu);
 
 		break;
 	case '5':
@@ -340,7 +350,9 @@ uint16_t imprimir_menu(void) {
 			dato[i] = (uint8_t) datoRecibido;
 		}
 
-		valorDevolver = ((dato[0] * 10) + dato[1]);
+		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
+		sprintf(stringMenu, "valor ingresado = %d \n \r", valorDevolver);
+		transmit_string(stringMenu);
 
 		break;
 	case '6':
@@ -357,7 +369,9 @@ uint16_t imprimir_menu(void) {
 			dato[i] = (uint8_t) datoRecibido;
 		}
 
-		valorDevolver = ((dato[0] * 10) + dato[1]);
+		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
+		sprintf(stringMenu, "valor ingresado = %d \n \r", valorDevolver);
+		transmit_string(stringMenu);
 
 		break;
 
@@ -376,12 +390,15 @@ uint16_t imprimir_menu(void) {
 			dato[i] = (uint8_t) datoRecibido;
 		}
 
-		valorDevolver = ((dato[0] * 10) + dato[1]);
+		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
+
+		sprintf(stringMenu, "valor ingresado = %d \n \r", valorDevolver);
+		transmit_string(stringMenu);
 
 		break;
 
 	case '8':
-		sprintf(stringMenu, "se setearan los valores por defecto\n \r");
+		sprintf(stringMenu, "/nse setearan los valores por defecto\n \r");
 		transmit_string(stringMenu);
 		sprintf(stringMenu, "temperatura entre %d y %d\n \r", TEMPMIN, TEMPMAX);
 		transmit_string(stringMenu);

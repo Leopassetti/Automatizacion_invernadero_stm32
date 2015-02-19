@@ -47,6 +47,8 @@ void ventilador_off(uint8_t vent_n);
 
 void iluminacion(uint8_t estado);
 
+void bsp_delay10Ms(uint16_t x);
+
 float leer_temperatura_lm335(void);
 
 

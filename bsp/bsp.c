@@ -15,10 +15,10 @@
 #define LED_3 GPIO_Pin_2
 #define LED_4 GPIO_Pin_3
 
-#define VENT_1 GPIO_Pin_12
-#define VENT_2 GPIO_Pin_13
-#define VENT_3 GPIO_Pin_14
-#define VENT_4 GPIO_Pin_15
+#define VENT_1 GPIO_Pin_14
+#define VENT_2 GPIO_Pin_11
+#define VENT_3 GPIO_Pin_8
+#define VENT_4 GPIO_Pin_9
 
 #define BOTON GPIO_Pin_0
 
@@ -28,13 +28,15 @@ GPIO_TypeDef* leds_port[] = { GPIOD, GPIOD, GPIOD, GPIOD };
 uint16_t const leds[] = { LED_1, LED_2, LED_3, LED_4 };
 
 /* Puertos de los ventiladores disponibles */
-GPIO_TypeDef* vent_port[] = { GPIOD , GPIOD , GPIOD , GPIOD  };
+GPIO_TypeDef* vent_port[] = { GPIOC , GPIOC , GPIOC , GPIOC  };
 /* Leds disponibles */
 uint16_t const vent[] = { VENT_1, VENT_2, VENT_3, VENT_4 };
 
 extern void APP_ISR_10ms(void);
 extern void APP_dato_rx(uint8_t dato);
 extern void APP_ISR_sw(void);
+
+volatile uint16_t bsp_contMS = 0;
 
 void led_on(uint8_t led) {
 	GPIO_SetBits(leds_port[led], leds[led]);
@@ -110,6 +112,13 @@ void iluminacion(uint8_t estado){
 	}
 }
 
+void bsp_delay10Ms(uint16_t x) {
+
+	bsp_contMS = x;
+	while (bsp_contMS)
+		;
+
+}
 
 
 
@@ -121,7 +130,7 @@ float leer_temperatura_lm335(void) {
 	float voltaje;
 
 	// Selecciono el canal a convertir
-	ADC_RegularChannelConfig(ADC1, 12, 1, ADC_SampleTime_15Cycles);
+	ADC_RegularChannelConfig(ADC1, 3, 1, ADC_SampleTime_15Cycles);
 	ADC_SoftwareStartConv(ADC1);
 
 	// Espero a que la conversión termine
@@ -131,9 +140,9 @@ float leer_temperatura_lm335(void) {
 	// Guardo el valor leido
 	valor_adc = ADC_GetConversionValue(ADC1);
 
-	voltaje = (float)(valor_adc * (vref/4095));
+	voltaje = (((float)valor_adc) * (vref/4095));
 
-	temp = voltaje; // falta modificar la ecuacion esta
+	temp = voltaje / 0.066;  // falta modificar la ecuacion esta
 
 	return temp;
 }
@@ -180,6 +189,9 @@ void TIM3_IRQHandler(void) {
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
 		APP_ISR_10ms();
+		if (bsp_contMS) {
+			bsp_contMS--;
+		}
 
 	}
 }
@@ -255,16 +267,16 @@ void bsp_vent_init() {
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	// Arranco el clock del periferico
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14
-			| GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_11 | GPIO_Pin_8
+			| GPIO_Pin_9;
 
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP; // (Push/Pull)
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
+	GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
 
