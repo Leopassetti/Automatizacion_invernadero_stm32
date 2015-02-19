@@ -104,7 +104,7 @@
       </source>
       <source file="..\..\..\bsp\bsp.h" lastModified="14b9abf055b">
       </source>
-      <source file="..\..\..\bsp\bsp.c" lastModified="14b9ef86fbe">
+      <source file="..\..\..\bsp\bsp.c" lastModified="14ba3570bb6">
          <include file="..\..\..\cmsis_boot\stm32f4xx.h"/>
          <include file="..\..\..\cmsis_lib\include\stm32f4xx_gpio.h"/>
          <include file="..\..\..\cmsis_lib\include\stm32f4xx_rcc.h"/>
@@ -147,9 +147,6 @@
       <source file="..\..\..\cmsis_lib\source\stm32f4xx_usart.c" lastModified="14a7271cffb">
          <include file="..\..\..\cmsis_lib\include\stm32f4xx_usart.h"/>
          <include file="..\..\..\cmsis_lib\include\stm32f4xx_rcc.h"/>
-      </source>
-      <source file="..\..\..\main.c" lastModified="14b9ef9bfd7">
-         <include file="..\..\..\bsp\bsp.h"/>
       </source>
       <source file="..\..\..\cmsis\core_cmFunc.h" lastModified="14a72715c5b">
       </source>

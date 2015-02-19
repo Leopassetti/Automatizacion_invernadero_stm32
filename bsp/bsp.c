@@ -94,20 +94,20 @@ void transmit_string(char* str) {
 }
 
 void ventilador_on(uint8_t vent_n) {
-	GPIO_SetBits(vent_port[vent_n], vent[vent_n]);
+	GPIO_ResetBits(vent_port[vent_n], vent[vent_n]);
 }
 
 void ventilador_off(uint8_t vent_n) {
-	GPIO_ResetBits(vent_port[vent_n], vent[vent_n]);
+	GPIO_SetBits(vent_port[vent_n], vent[vent_n]);
 }
 
 void iluminacion(uint8_t estado){
 
 	if(estado == 1){
-		GPIO_SetBits(GPIOD, GPIO_Pin_11);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_11);
 	}
 	else{
-		GPIO_ResetBits(GPIOD, GPIO_Pin_11);
+		GPIO_SetBits(GPIOD, GPIO_Pin_11);
 
 	}
 }

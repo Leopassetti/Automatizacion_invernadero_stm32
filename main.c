@@ -149,11 +149,12 @@ int main(void) {
 
 		if (botonPresionado == 1) {
 
-			botonPresionado = 0;
-			bsp_delay10Ms(1);
 
 			flagRx = 0;
+
 			seteo = imprimir_menu();
+
+			botonPresionado = 0;
 
 			if(seteo != 0)
 			{
@@ -235,7 +236,7 @@ uint16_t imprimir_menu(void) {
 	uint8_t dato[4] = {0};
 	uint8_t i;
 
-	temp = leer_temperatura_lm335();
+	temp = leer_temperatura();
 	hum = leer_humedad();
 
 	sprintf(stringMenu, "\n \rIngrese la opcion que desea:\n \r");
@@ -259,11 +260,12 @@ uint16_t imprimir_menu(void) {
 
 	espera = count;
 	while (flagRx == 0) {
-		if (espera >= (count + 20))
+		if (count >= (espera + 20))
 			return 0;
 	}
 
 	opcion = datoRecibido;
+	flagRx = 0;
 
 	switch (opcion) {
 	case '1':
@@ -284,10 +286,11 @@ uint16_t imprimir_menu(void) {
 		espera = count;
 		for (i = 0; i < 2; i++) {
 			while (flagRx == 0) {
-				if (espera >= (count + 20))
+				if (count >= (espera + 20))
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
+			flagRx = 0;
 
 			}
 
@@ -305,10 +308,11 @@ uint16_t imprimir_menu(void) {
 		espera = count;
 		for (i = 0; i < 2; i++) {
 			while (flagRx == 0) {
-				if (espera >= (count + 20))
+				if (count >= (espera + 20))
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
+			flagRx = 0;
 		}
 
 		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
@@ -325,10 +329,11 @@ uint16_t imprimir_menu(void) {
 		espera = count;
 		for (i = 0; i < 2; i++) {
 			while (flagRx == 0) {
-				if (espera >= (count + 20))
+				if (count >= (espera + 20))
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
+			flagRx = 0;
 		}
 
 		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
@@ -344,10 +349,11 @@ uint16_t imprimir_menu(void) {
 		espera = count;
 		for (i = 0; i < 2; i++) {
 			while (flagRx == 0) {
-				if (espera >= (count + 20))
+				if (count >= (espera + 20))
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
+			flagRx = 0;
 		}
 
 		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
@@ -363,10 +369,11 @@ uint16_t imprimir_menu(void) {
 		espera = count;
 		for (i = 0; i < 2; i++) {
 			while (flagRx == 0) {
-				if (espera >= (count + 20))
+				if (count >= (espera + 20))
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
+			flagRx = 0;
 		}
 
 		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
@@ -384,10 +391,11 @@ uint16_t imprimir_menu(void) {
 		espera = count;
 		for (i = 0; i < 2; i++) {
 			while (flagRx == 0) {
-				if (espera >= (count + 20))
+				if (count >= (espera + 20))
 					return 0;
 			}
 			dato[i] = (uint8_t) datoRecibido;
+			flagRx = 0;
 		}
 
 		valorDevolver = (((dato[0] - 48) * 10) + (dato[1] - 48));
@@ -398,7 +406,7 @@ uint16_t imprimir_menu(void) {
 		break;
 
 	case '8':
-		sprintf(stringMenu, "/nse setearan los valores por defecto\n \r");
+		sprintf(stringMenu, "Se setearan los valores por defecto\n \r");
 		transmit_string(stringMenu);
 		sprintf(stringMenu, "temperatura entre %d y %d\n \r", TEMPMIN, TEMPMAX);
 		transmit_string(stringMenu);
